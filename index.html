@@ -8,6 +8,7 @@
   :root{
     --accent:#c0873f;--accent-soft:rgba(192,135,63,.30);
     --ink:#1f2529;--muted:#6b7378;--paper:#f6f3ee;--line:#e2ddd4;
+    --mk:clamp(4px,1.35cqw,14px);
   }
   *{box-sizing:border-box}
   html,body{margin:0}
@@ -22,7 +23,8 @@
   .hint{margin-left:auto;font-style:italic}
   .wrap{max-width:1200px;margin:0 auto;padding:6px 26px 40px}
   .stage{position:relative;width:100%;border:1px solid var(--line);border-radius:14px;overflow:hidden;
-    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04),0 12px 34px -18px rgba(0,0,0,.22);}
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04),0 12px 34px -18px rgba(0,0,0,.22);
+    container-type:inline-size;}
   .stage img.plan{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
   svg.overlay{position:absolute;inset:0;width:100%;height:100%}
   .zone{fill:transparent;stroke:transparent;stroke-width:.35;transition:fill .13s,stroke .13s;cursor:pointer}
@@ -30,17 +32,23 @@
   body.showall .zone{stroke:rgba(192,135,63,.55);fill:rgba(192,135,63,.08)}
   body.showall .zone:hover,body.showall .zone.active{fill:var(--accent-soft);stroke:var(--accent)}
 
-  /* switch markers — flex container is the tap target; .dot is the visible mark */
+  /* switch markers — size scales with the plan (cqw) so it stays small at any width.
+     The 26px box is an invisible tap target; the visible .dot is the small mark. */
   .marker{position:absolute;transform:translate(-50%,-50%);z-index:20;cursor:pointer;
-    width:34px;height:34px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
-  .marker .dot{width:26px;height:26px;border-radius:50%;background:#fff;
-    border:2.5px solid var(--accent);display:flex;align-items:center;justify-content:center;
-    box-shadow:0 2px 6px rgba(0,0,0,.28);transition:transform .12s ease}
-  .marker:hover .dot,.marker.active .dot{transform:scale(1.15)}
-  .marker .pulse{position:absolute;width:26px;height:26px;border-radius:50%;border:2px solid var(--accent);
-    animation:pulse 2s ease-out infinite;pointer-events:none}
-  @keyframes pulse{0%{transform:scale(1);opacity:.55}100%{transform:scale(2.05);opacity:0}}
-  .marker svg{width:13px;height:13px;display:block}
+    width:26px;height:26px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+  .marker .dot{width:var(--mk);height:var(--mk);border-radius:50%;background:var(--accent);
+    border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(192,135,63,.9),0 1px 3px rgba(0,0,0,.4);
+    transition:transform .12s ease;z-index:2}
+  .marker:hover .dot,.marker.active .dot{transform:scale(1.3)}
+  .marker .pulse{position:absolute;width:var(--mk);height:var(--mk);border-radius:50%;border:1.5px solid var(--accent);
+    animation:pulse 2.1s ease-out infinite;pointer-events:none}
+  @keyframes pulse{0%{transform:scale(1);opacity:.5}100%{transform:scale(2.6);opacity:0}}
+  /* mounting stem: a short line from the dot to the wall face it sits on */
+  .marker .stem{position:absolute;background:var(--accent);border-radius:2px;z-index:1}
+  .marker .stem.left {height:2px;width:calc(var(--mk) + 3px);right:50%;top:50%;transform:translateY(-50%)}
+  .marker .stem.right{height:2px;width:calc(var(--mk) + 3px);left:50%;top:50%;transform:translateY(-50%)}
+  .marker .stem.up   {width:2px;height:calc(var(--mk) + 3px);bottom:50%;left:50%;transform:translateX(-50%)}
+  .marker .stem.down {width:2px;height:calc(var(--mk) + 3px);top:50%;left:50%;transform:translateX(-50%)}
 
   /* room photo card (floating) */
   #card{position:fixed;z-index:50;pointer-events:none;opacity:0;transform:translateY(6px);
@@ -80,20 +88,9 @@
   #lb .nav{position:absolute;top:50%;transform:translateY(-50%);color:#fff;font-size:44px;
     cursor:pointer;opacity:.75;user-select:none;padding:0 14px}
   #lb .prev{left:8px}#lb .next{right:8px}
-  @media (max-width:820px){
-    /* smaller plan on tablets -> smaller mark */
-    .marker{width:30px;height:30px}
-    .marker .dot,.marker .pulse{width:20px;height:20px}
-    .marker svg{width:10px;height:10px}
-  }
   @media (max-width:640px){
     header,.bar{padding-left:16px;padding-right:16px}
     .wrap{padding:6px 12px 34px}.hint{display:none}
-    /* on phones the plan is tiny, so use a small solid dot instead of the detailed glyph */
-    .marker{width:28px;height:28px}
-    .marker .dot{width:14px;height:14px;background:var(--accent);border-color:#fff;border-width:2px}
-    .marker .pulse{width:14px;height:14px;border-color:var(--accent)}
-    .marker svg{display:none}
     #gal{width:min(340px,92vw)}
     #gal .gitem img{height:118px}
     #gal .ghead{font-size:13px}
@@ -131,7 +128,7 @@
       <polygon class="zone" data-id="wc" points="71.5,32 79,32 79,40 71.5,40"><title>WC</title></polygon>
       <polygon class="zone" data-id="rear" points="72,4.5 96,4.5 96,52 88,58 88,80 63,80 63,49 72,49"><title>Dining Room (rear)</title></polygon>
     </svg>
-    <div class="marker" data-id="sw_hall" style="left:24.4%;top:70.8%" title="Lighting keypad — Hall"><span class="pulse"></span><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="#c0873f" stroke-width="2.4" stroke-linecap="round"><line x1="8" y1="8" x2="8" y2="8.2"/><line x1="16" y1="8" x2="16" y2="8.2"/><line x1="8" y1="12" x2="8" y2="12.2"/><line x1="16" y1="12" x2="16" y2="12.2"/><line x1="8" y1="16" x2="8" y2="16.2"/><line x1="16" y1="16" x2="16" y2="16.2"/></svg></span></div>
+    <div class="marker" data-id="sw_hall" style="left:26.7%;top:71.2%" title="Lighting keypad — Hall"><span class="stem left"></span><span class="pulse"></span><span class="dot"></span></div>
   </div>
 </div>
 
